@@ -1,0 +1,42 @@
+$bleu: #0074c7;
+$fond: #f1f8fc;
+$texte: #384050;
+
+body {
+  margin: 0;
+  background-color: $fond;
+  color: $texte;
+  font-family: Arial, sans-serif;
+}
+
+main {
+  padding: 24px;
+}
+
+h1 {
+  color: $bleu;
+}
+header {
+  background-color: $fond;
+
+  a {
+    color: $texte;
+    text-decoration: none;
+
+    &:hover {
+      color: $bleu;
+      text-decoration: underline;
+    }
+  }
+}
+
+.btn-primary {
+  background-color: $bleu;
+  border-color: $bleu;
+
+  &:hover,
+  &:focus-visible {
+    background-color: #00497c;
+    border-color: #00497c;
+  }
+}
