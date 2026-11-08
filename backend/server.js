@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const sequelize = require('./db');
 const { Categorie, Specialite, Artisan } = require('./models');
-const nodemailer = require('nodemailer');
 const obtenirTransporteur = require('./mailer');
+
 const app = express();
 const port = Number(process.env.PORT || 3001);
 
@@ -11,7 +11,27 @@ app.use(cors({
   origin: process.env.FRONTEND_URL,
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '20kb' }));
+
+const attributsArtisan = [
+  'id', 'nom', 'note', 'ville',
+  'a_propos', 'site_web', 'top',
+];
+
+const relationsArtisan = [
+  {
+    model: Specialite,
+    as: 'specialite',
+    attributes: ['id', 'nom'],
+    include: [
+      {
+        model: Categorie,
+        as: 'categorie',
+        attributes: ['id', 'nom'],
+      },
+    ],
+  },
+];
 
 app.get('/api/health', (req, res) => {
   res.json({ message: 'API opérationnelle' });
@@ -26,6 +46,7 @@ app.get('/api/categories', async (req, res) => {
     res.json(categories);
   } catch (erreur) {
     console.error(erreur.message);
+
     res.status(500).json({
       message: 'Impossible de récupérer les catégories.',
     });
@@ -35,35 +56,21 @@ app.get('/api/categories', async (req, res) => {
 app.get('/api/artisans', async (req, res) => {
   try {
     const artisans = await Artisan.findAll({
-      attributes: [
-        'id', 'nom', 'note', 'ville',
-        'a_propos', 'site_web', 'top',
-      ],
-      include: [
-        {
-          model: Specialite,
-          as: 'specialite',
-          attributes: ['id', 'nom'],
-          include: [
-            {
-              model: Categorie,
-              as: 'categorie',
-              attributes: ['id', 'nom'],
-            },
-          ],
-        },
-      ],
+      attributes: attributsArtisan,
+      include: relationsArtisan,
       order: [['id', 'ASC']],
     });
 
     res.json(artisans);
   } catch (erreur) {
     console.error(erreur.message);
+
     res.status(500).json({
       message: 'Impossible de récupérer les artisans.',
     });
   }
 });
+
 app.get('/api/artisans/:id', async (req, res) => {
   const id = Number(req.params.id);
 
@@ -75,24 +82,8 @@ app.get('/api/artisans/:id', async (req, res) => {
 
   try {
     const artisan = await Artisan.findByPk(id, {
-      attributes: [
-        'id', 'nom', 'note', 'ville',
-        'a_propos', 'site_web', 'top',
-      ],
-      include: [
-        {
-          model: Specialite,
-          as: 'specialite',
-          attributes: ['id', 'nom'],
-          include: [
-            {
-              model: Categorie,
-              as: 'categorie',
-              attributes: ['id', 'nom'],
-            },
-          ],
-        },
-      ],
+      attributes: attributsArtisan,
+      include: relationsArtisan,
     });
 
     if (!artisan) {
@@ -110,6 +101,7 @@ app.get('/api/artisans/:id', async (req, res) => {
     });
   }
 });
+
 app.post('/api/artisans/:id/contact', async (req, res) => {
   const id = Number(req.params.id);
 
@@ -136,7 +128,10 @@ app.post('/api/artisans/:id/contact', async (req, res) => {
   const message = req.body.message.trim();
 
   if (
-    !nom || !email || !objet || !message ||
+    !nom ||
+    !email ||
+    !objet ||
+    !message ||
     nom.length > 150 ||
     email.length > 254 ||
     objet.length > 200 ||
@@ -160,21 +155,21 @@ app.post('/api/artisans/:id/contact', async (req, res) => {
 
     const transporteur = await obtenirTransporteur();
 
-    const resultat = await transporteur.sendMail({
-      from: '"Trouve ton artisan" <contact@example.com>',
-      to: artisan.email,
+    await transporteur.sendMail({
       replyTo: email,
-      subject: objet,
-      text: `Nom : ${nom}\nE-mail : ${email}\n\n${message}`,
+      subject: `[Test Trouve ton artisan] ${objet}`,
+      text: [
+        `Artisan concerné : ${artisan.nom}`,
+        `Nom : ${nom}`,
+        `E-mail : ${email}`,
+        '',
+        message,
+      ].join('\n'),
     });
 
-    console.log(
-      'Aperçu du message de test :',
-      nodemailer.getTestMessageUrl(resultat)
-    );
-
     res.json({
-      message: 'Message de test créé. Aucun e-mail réel envoyé.',
+      message:
+        'Message de test transmis. Vérifiez votre boîte mail et vos spams.',
     });
   } catch (erreur) {
     console.error('Envoi impossible :', erreur.message);
@@ -184,12 +179,18 @@ app.post('/api/artisans/:id/contact', async (req, res) => {
     });
   }
 });
+
 async function demarrer() {
   try {
     await sequelize.authenticate();
 
-    app.listen(port, () => {
-      console.log(`API démarrée sur http://localhost:${port}`);
+    const serveur = app.listen(port, '0.0.0.0', () => {
+      console.log(`API démarrée sur le port ${port}`);
+    });
+
+    serveur.on('error', (erreur) => {
+      console.error('Démarrage impossible :', erreur.message);
+      process.exitCode = 1;
     });
   } catch (erreur) {
     console.error('Démarrage impossible :', erreur.message);
