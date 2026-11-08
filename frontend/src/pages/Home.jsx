@@ -13,7 +13,7 @@ function Home() {
     async function chargerArtisans() {
       try {
         const reponse = await fetch(
-          'http://localhost:3001/api/artisans',
+          `${import.meta.env.VITE_API_URL}/api/artisans`,
           { signal: controller.signal }
         );
 
