@@ -87,7 +87,7 @@ function Artisans() {
       ) : (
         <>
           <p>{resultats.length} artisan(s) trouvé(s)</p>
-
+<h2 className="visually-hidden">Résultats de la recherche</h2>
           <div className="row g-4">
             {resultats.map((artisan) => (
               <div
