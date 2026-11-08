@@ -119,8 +119,10 @@ function ContactForm({ artisanId }) {
         </div>
 
         <p className="small mt-3">
-          Mode test : aucun e-mail ne sera livré à l’artisan.
-        </p>
+  Site de démonstration : votre message sera envoyé à la boîte
+  de test du projet, et non à l’artisan. Ne saisissez pas
+  d’informations sensibles.
+</p>
 
         {confirmation && (
           <p role="status" className="text-success">
