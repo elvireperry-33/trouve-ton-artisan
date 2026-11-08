@@ -6,7 +6,7 @@ function ArtisanCard({ id, nom, note, specialite, ville }) {
       <div className="card-body">
         <h3 className="h5">{nom}</h3>
 
-        <p aria-label={`Note : ${note} sur 5`}>
+      <p>
           <span
             className="text-primary"
             aria-hidden="true"
