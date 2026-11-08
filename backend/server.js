@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { rateLimit } = require('express-rate-limit');
 const sequelize = require('./db');
 const { Categorie, Specialite, Artisan } = require('./models');
 const obtenirTransporteur = require('./mailer');
@@ -7,11 +8,28 @@ const obtenirTransporteur = require('./mailer');
 const app = express();
 const port = Number(process.env.PORT || 3001);
 
+// Render transmet les requêtes au serveur via un proxy.
+if (process.env.RENDER === 'true') {
+  app.set('trust proxy', 1);
+}
+
 app.use(cors({
   origin: process.env.FRONTEND_URL,
 }));
 
 app.use(express.json({ limit: '20kb' }));
+
+// Cette limite est commune à toutes les fiches artisans.
+const limiteContact = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    message:
+      'Trop de tentatives. Veuillez réessayer dans 15 minutes.',
+  },
+});
 
 const attributsArtisan = [
   'id', 'nom', 'note', 'ville',
@@ -102,7 +120,7 @@ app.get('/api/artisans/:id', async (req, res) => {
   }
 });
 
-app.post('/api/artisans/:id/contact', async (req, res) => {
+app.post('/api/artisans/:id/contact', limiteContact, async (req, res) => {
   const id = Number(req.params.id);
 
   if (!Number.isSafeInteger(id) || id <= 0) {
