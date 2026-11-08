@@ -83,7 +83,7 @@ function Artisan() {
 
           <h1 className="mt-4">{artisan.nom}</h1>
 
-          <p aria-label={`Note : ${artisan.note} sur 5`}>
+         <p>
             <span className="text-primary" aria-hidden="true">
               {'★'.repeat(Math.round(Number(artisan.note)))}
               {'☆'.repeat(5 - Math.round(Number(artisan.note)))}
