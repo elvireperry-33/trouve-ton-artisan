@@ -1,3 +1,7 @@
+$bleu: #0074c7;
+$fond: #f1f8fc;
+$texte: #384050;
+
 @font-face {
   font-family: 'Graphik';
   src: url('/fonts/Graphik-Regular-Trial.otf') format('opentype');
@@ -13,14 +17,12 @@
   font-style: normal;
   font-display: swap;
 }
-$fond: #f1f8fc;
-$texte: #384050;
 
 body {
   margin: 0;
   background-color: $fond;
   color: $texte;
-font-family: 'Graphik', Arial, sans-serif;
+  font-family: 'Graphik', Arial, sans-serif;
 }
 
 main {
@@ -30,6 +32,7 @@ main {
 h1 {
   color: $bleu;
 }
+
 header {
   background-color: $fond;
 
